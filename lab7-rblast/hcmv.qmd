@@ -6,7 +6,7 @@ date: Mar. 18, 2026
 output: html_document
 ---
 
-Today we're going to apply our work on R to Bioinformatic data sets. The typical output of a DNA sequencing experiment is a fastq file, consisting of often millions of configs which need to be stitched together (do you remember the two ways we do that?). Fastq files are different from fasta files as they contain quality scores -- this is useful to see how reliable your fastq data is.  The first tool we are going to use is Fastqc, to interpret the results of our fastq files.
+Today we're going to apply our work on R to Bioinformatic data sets. The typical output of a DNA sequencing experiment is a fastq file, consisting of often millions of configs which need to be stitched together (do you remember the two ways we do that?). Fastq files are different from fasta files as they contain quality scores -- this is useful to see how reliable your fastq data is. The first tool we are going to use is Fastqc, to interpret the results of our fastq files.
 
 # Quality Control
 
@@ -17,7 +17,7 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install("Rqc")
 ```
 
-We will use a specific small dataset used specifically for teaching bioinformatics. Rqc will output an .html file (essentially a web page).  For this class, I will ask that you understand specifically the results of 'Average Quality', 'Cycle-Specific Average Quality', 'Cycle-specific Quality Distribution', and 'Cycle-Specific Base Call Proportion'.
+We will use a specific small dataset used specifically for teaching bioinformatics. Rqc will output an .html file (essentially a web page). For this class, I will ask that you understand specifically the results of 'Average Quality', 'Cycle-Specific Average Quality', 'Cycle-specific Quality Distribution', and 'Cycle-Specific Base Call Proportion'.
 
 ```{r}
 library(Rqc)
@@ -27,7 +27,7 @@ rqc(path = folder, pattern = ".fastq.gz")
 
 # Bioconductor
 
-Bioconductor and Biostrings are especially powerful tools to examine fasta files in R.  In this section, we'll learn some tools to manipulate them.  
+Bioconductor and Biostrings are especially powerful tools to examine fasta files in R. In this section, we'll learn some tools to manipulate them.
 
 ```{r}
 library(Biostrings)
@@ -43,7 +43,7 @@ UK_seqs <- seqs[names_with_europe]
 UK_subset <- subseq(UK_seqs, start = 20000, end = 25000)
 ```
 
-You can, using R, code an aligned genome as a matrix, in order to identify snps. 
+You can, using R, code an aligned genome as a matrix, in order to identify snps.
 
 ```{r}
 mat <- as.matrix(UK_seqs)
@@ -64,14 +64,14 @@ names(snp_list) <- paste0("Pos_", snp_positions)
 
 #Alignment
 
-The final skill we need to learn is how to align .fasta files to a reference genome.  The data we have today is aligned so we'll have to arbitrarily "unalign" it.  We will use our first sequence as the reference.  
+The final skill we need to learn is how to align .fasta files to a reference genome. The data we have today is aligned so we'll have to arbitrarily "unalign" it. We will use our first sequence as the reference.
 
 ```{r}
 UK_seqs_nogap <- DNAStringSet(gsub("-", "", as.character(UK_seqs))) 
 ref <- seqs[6]
 ```
 
-The region of interest from hcmv will be our query site.   
+The region of interest from hcmv will be our query site.
 
 ```{r}
 library(Biostrings)
@@ -93,9 +93,13 @@ alignments
 
 # Homework Question 1: Interpretting QC data.
 
-a. Look at the 'Cycle-specific Base Call Proportion' rqc file.  What is the ratio of A/C/G/T in cycles 1-10. What is the ratio of A/C/G/T in cycles 65-75?  Based on your knowledge of DNA-sequencing, propose a hypothesis for why the cycles have a different ratio.
+a.  Look at the 'Cycle-specific Base Call Proportion' rqc file. What is the ratio of A/C/G/T in cycles 1-10. What is the ratio of A/C/G/T in cycles 65-75? Based on your knowledge of DNA-sequencing, propose a hypothesis for why the cycles have a different ratio.
 
-b. Look at the 'Cycle specific Quality Distribution'. What is the typial quality of cycles 1-10?  What is the typical quality of cycles 65-75?  Based on your knowledge of DNA-sequencing, propose a hypothesis for why the cycles have a different quality
+The ratio in cycles 1-10 is about A=25% C=30% G=20 T=20 and the ratios for cycles 65-75 is abut A=25% C=27% G=23% T=25%. This is probably because of low sequence diversity at the beginning of reads and as the sequencing continues it is moved into random genomic DNA fragments.
+
+b.  Look at the 'Cycle specific Quality Distribution'. What is the typial quality of cycles 1-10? What is the typical quality of cycles 65-75? Based on your knowledge of DNA-sequencing, propose a hypothesis for why the cycles have a different quality
+
+The typical quality of cycles 1-10 is about 35-40 and the typical quality of cycle 65-75 is about 20-30. This is probably because in early cycles signal detection is strong and clean and as you continue in the cycles the phasing errors build up and signal intensity decreases.
 
 # Homework Question 2: Loading a File, Reverse Complements
 
@@ -104,8 +108,27 @@ For one of the research projects, we will be studying a specific protein coding 
 ```{r}
 query <- readDNAStringSet("hcmv15-hcmv1b-1.fasta")
 reversecompquery <- reverseComplement(query)
+
+query <- DNAString(toupper(as.character(query)))
+reversecompquery <- DNAString(toupper(as.character(reversecompquery)))
+
+queryallignment <- matchPattern(query, ref[[1]], max.mismatch=20)
+ reversequeryallignment <- matchPattern(reversecompquery, ref[[1]], max.mismatch=20)
 ```
 
 # Homework Question 3: Isolating a Site
 
-Isolate the 'hcmv15-hcmv1b-1.fasta' site in all 259 seqs. Your final result should be a DNAString set of 259 sequences about 4-5 kb long.  
+Isolate the 'hcmv15-hcmv1b-1.fasta' site in all 259 seqs. Your final result should be a DNAString set of 259 sequences about 4-5 kb long.
+
+```{r}
+seqs <- readDNAStringSet("hcmv15-hcmv1b-1.fasta")
+ seqs <- DNAString(toupper(as.character(seqs)))
+ 
+ gap_positions <- gregexpr("-", as.character(seqs))
+ 
+ allignseqs <- matchPattern("-", seqs, max.mismatch=20)
+ 
+ countseqs <- countPattern("-", seqs, max.mismatch = 5)
+ 
+ refseqs <- DNAStringSet(gsub("-", "", as.character(seqs)))
+```
