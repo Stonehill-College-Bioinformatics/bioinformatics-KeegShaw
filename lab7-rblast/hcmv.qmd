@@ -128,6 +128,8 @@ seqs <- readDNAStringSet("hcmv15-hcmv1b-1.fasta")
  
  allignseqs <- matchPattern("-", seqs, max.mismatch=20)
  
+ find the 187075th letter and start there
+ 
  countseqs <- countPattern("-", seqs, max.mismatch = 5)
  
  refseqs <- DNAStringSet(gsub("-", "", as.character(seqs)))
